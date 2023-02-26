@@ -1,0 +1,23 @@
+[
+    {
+        "domain": "example.com",
+        "ttl": "3600",
+        "proxy": "false",
+        "zoneid": "<Cloudflare Zone ID>",
+        "token": "<Cloudflare Zone Edit Token>"
+    },
+    {
+        "domain": "sub.example.com",
+        "ttl": "3600",
+        "proxy": "false",
+        "zoneid": "<Cloudflare Zone ID>",
+        "token": "<Cloudflare Zone Edit Token>"
+    },
+    {
+        "domain": "any.sub.example.com",
+        "ttl": "3600",
+        "proxy": "false",
+        "zoneid": "<Cloudflare Zone ID>",
+        "token": "<Cloudflare Zone Edit Token>"
+    }
+]
