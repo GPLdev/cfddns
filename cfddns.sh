@@ -4,49 +4,39 @@ shopt -s nullglob globstar
 set -euo pipefail
 REALDIR=$(dirname $(realpath "$0"))
 ERROR=false
-
 if [ ! $(command -v curl) ]; then
     printf "\n\e[31;1mERROR: * * * please install curl * * *\e[0m\n\n"
     exit 1
 fi
-
 if [ ! $(command -v jq) ]; then
     printf "\n\e[31;1mERROR: * * * please install jq * * *\e[0m\n\n"
     exit 1
 fi
-
 if [ ! -f "$REALDIR/myipstun" ]; then
     printf "\n\e[31;1mERROR: * * * please install myip * * *\e[0m\n\n"
     exit 1
 fi
-
 if [ ! -f "$REALDIR/config.json" ]; then
     printf "\n\e[31;1mERROR: * * * Missing config file * * *\e[0m\n\n"
     exit 1
 fi
-
 IPv4='([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])\.([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])'
 printf "\n\033[0;32m--- %s ---\033[0m\n\n" "$(date)"
 printf "\033[0;33m*** trying to get WAN IP with DNS\033[0m \033[0;34m>>>\033[0m\n"
 WAN_IP=$(dig @ns1.google.com o-o.myaddr.l.google.com TXT +short | tr -d \" 2>/dev/null); check=$?
-
 if [ "$check" != 0 ] || [[ ! "$WAN_IP" =~ ^$IPv4$ ]]; then
     printf "\033[0;34m>>>\033[0m \033[0;33mtrying to get WAN IP with STUN\033[0m \033[0;34m>>>\033[0m\n"
     WAN_IP=$("$REALDIR/myipstun" 2>/dev/null); check=$?
 fi
-
 if [ "$check" != 0 ] || [[ ! "$WAN_IP" =~ ^$IPv4$ ]]; then
     printf "\033[0;34m>>>\033[0m \033[0;33mtrying to get WAN IP with HTTPS\033[0m \033[0;34m>>>\033[0m\n"
     WAN_IP=$(curl -s "https://checkip.amazonaws.com/"); check=$?
 fi
-
 if [ "$check" != 0 ] || [[ ! "$WAN_IP" =~ ^$IPv4$ ]]; then
     printf "\033[0;34m>>>\033[0m \033[0;33mtrying to get WAN IP with HTTPS\033[0m \033[0;34m>>>\033[0m\n"
     WAN_IP=$(curl -s "https://1.1.1.1/cdn-cgi/trace" | sed -nr "s/^ip\=(.+)$/\1/p"); check=$?
 fi
-
 printf "\033[0;34m>>>\033[0m \033[0;32mWAN IP is %s\033[0m\n\n" "$WAN_IP"
-printf "\033[0;33m*** trying to get recorded IP from logs\033[0m \033[0;34m>>>\033[0m\n"
 if [ ! -d "$REALDIR/logs" ]; then
     if [ ! ${EUID} -eq 0 ]; then
         printf "\n\e[31;1mERROR: * * * please run as root or sudo  * * *\e[0m\n\n"
@@ -55,25 +45,22 @@ if [ ! -d "$REALDIR/logs" ]; then
     printf "\033[0;34m>>>\033[0m \033[0;33mlogs directory is not present\033[0m \033[0;34m>>>\033[0m\n\033[0;34m>>>\033[0m \033[0;33mcreate directory\033[0m \033[0;34m>>>\033[0m\n"
     mkdir "$REALDIR/logs"
 fi
-
 if [ -f "$REALDIR/logs/MEM_IP" ]; then
     MEM_IP=$(cat "$REALDIR/logs/MEM_IP")
 fi
-
+printf "\033[0;33m*** trying to get recorded IP from logs\033[0m \033[0;34m>>>\033[0m\n"
 if [ -z "${MEM_IP+x}" ]; then
     printf "\033[0;34m>>>\033[0m \033[0;33mIP log file is not present\033[0m \033[0;34m>>>\033[0m\n\033[0;34m>>>\033[0m \033[0;33mcreate IP log file\033[0m\n\n"
     echo "$WAN_IP" > "$REALDIR/logs/MEM_IP"
 else
     printf "\033[0;34m>>>\033[0m \033[0;32mrecorded IP is %s\033[0m\n\n" "$MEM_IP"
 fi
-
 if [ -z "${MEM_IP+x}" ] || [ "$MEM_IP" != "$WAN_IP" ]; then
     printf "\033[0;34m* * * WAN IP has been changed and start to update DNS * * * \033[0m\n\n"
     DNSUPDATE=true
 else
     DNSUPDATE=false
 fi
-
 for UPDATE in $( jq -r '.[] | @base64' "$REALDIR/config.json" ); do
     _read() { echo "${UPDATE}" | base64 --decode | jq -r "${1}"; }
     unset DOMAIN TTL PROXY ZONEID TOKEN DOMAINID VERAUTH DOMAINDATA APIUPDATE NEWDOMAIN
@@ -144,13 +131,11 @@ for UPDATE in $( jq -r '.[] | @base64' "$REALDIR/config.json" ); do
         printf "\033[0;34m>>>\033[0m \033[0;32mno update required\033[0m\n\n"
     fi
 done
-
 if [ "$DNSUPDATE" = true ] && [ "$ERROR" = false ]; then
     printf "\033[0;33m*** trying to update new IP on log file\033[0m \033[0;34m>>>\033[0m\n"
     echo "$WAN_IP" > "$REALDIR/logs/MEM_IP"
     printf "\033[0;34m>>>\033[0m \033[0;32mnew IP updated on file\033[0m\n\n"
 fi
-
 printf "\n\033[0;32m* * * DNS update execution has been finished * * * \033[0m\n\n"
 unset REALDIR IPv4 WAN_IP MEM_IP DOMAIN TTL PROXY ZONEID TOKEN DOMAINID VERAUTH DOMAINDATA APIUPDATE NEWDOMAIN UPDATE ERROR
 
