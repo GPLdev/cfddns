@@ -1,5 +1,6 @@
 # Dynamic DNS (DDNS) - Cloudflare API Client
 <img alt="License" src="https://img.shields.io/github/license/GPLdev/cfddns?color=blue&style=plastic"> <img alt="Files" src="https://img.shields.io/github/directory-file-count/GPLdev/cfddns?color=blue&style=plastic"> <img alt="Size" src="https://img.shields.io/github/repo-size/GPLdev/cfddns?color=blue&style=plastic">
+<img alt="Size" src="https://img.shields.io/github/languages/code-size/GPLdev/cfddns?color=blue&style=plastic">
 <img alt="Last commit" src="https://img.shields.io/github/last-commit/GPLdev/cfddns/main?color=blue&style=plastic"> <img alt="Stars" src="https://img.shields.io/github/stars/GPLdev/cfddns?color=blue&style=plastic">
 
 Simple bash script for updating the public dynamic IP address to an existing Cloudflare DNS record. The script avoids unnecessary requests and keeps logs, checking for IP changes through DNS, STUN, and HTTPS. Simplify your system management by using simple scripts for straightforward tasks. Don't overcomplicate things by using complex software for simple API calls.
